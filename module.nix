@@ -43,8 +43,10 @@ let
           urlWithUnderscores;
       wmClass = "chrome-${urlForClass}-Default";
 
+      useAppDataDir = if app.appDataDir then "true" else "false";
+
       launchScript = pkgs.writeShellScriptBin "${app.name}-webapp" ''
-        exec ${pkgs.chromium}/bin/chromium \
+        exec ${lib.getExe cfg.package} \
           --window-name="${app.name}" \
           --app=${app.url} \
           --user-data-dir=$HOME/.config/chromium-webapps/"${app.name}" \
@@ -95,6 +97,11 @@ in
         ]
       '';
     };
+
+    package = mkPackageOption pkgs "chromium" { } // {
+      default = pkgs.chromium;
+    };
+
   };
 
   config = mkIf cfg.enable (
@@ -106,7 +113,7 @@ in
       );
     in
     {
-      home.packages = [ pkgs.chromium ] ++ (map mkDesktopEntry cfg.webApps) ++ iconPackages;
+      home.packages = [ cfg.package ] ++ (map mkDesktopEntry cfg.webApps) ++ iconPackages;
 
       home.activation.setupChromiumWebappProfiles = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         ${concatMapStrings (app: ''
