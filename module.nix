@@ -47,7 +47,7 @@ let
         exec ${pkgs.chromium}/bin/chromium \
           --window-name="${app.name}" \
           --app=${app.url} \
-          --user-data-dir=$HOME/.config/chromium-webapps/${app.name} \
+          --user-data-dir=$HOME/.config/chromium-webapps/"${app.name}" \
           --no-default-browser-check \
           --disable-features=GlobalShortcutsPortal
       '';
@@ -57,7 +57,7 @@ let
         Version=1.4
         Type=Application
         Name=${app.name}
-        Exec=${launchScript}/bin/${app.name}-webapp
+        Exec=${launchScript}/bin/"${app.name}-webapp"
         Terminal=false
         Categories=Network;WebBrowser;
         StartupWMClass=${wmClass}
@@ -66,7 +66,7 @@ let
     in
     pkgs.runCommand "${app.name}-desktop" { } ''
       mkdir -p $out/share/applications
-      cat > $out/share/applications/${app.name}.desktop <<EOF
+      cat > $out/share/applications/"${app.name}.desktop" <<EOF
       ${desktopContent}
       EOF
     '';
