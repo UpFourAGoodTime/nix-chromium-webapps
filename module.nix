@@ -25,6 +25,12 @@ let
         default = null;
         description = "Path to icon file";
       };
+      appDataDir = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Isolate user-data-dir for this PWA from the default directory for chromium;";
+      };
+
     };
   };
 
@@ -49,9 +55,11 @@ let
         exec ${lib.getExe cfg.package} \
           --window-name="${app.name}" \
           --app=${app.url} \
-          --user-data-dir=$HOME/.config/chromium-webapps/"${app.name}" \
           --no-default-browser-check \
-          --disable-features=GlobalShortcutsPortal
+          --disable-features=GlobalShortcutsPortal \
+          ${lib.optionalString (
+            app.appDataDir == true
+          ) "--user-data-dir=$HOME/.config/chromium-webapps/\"${app.name}\""}
       '';
 
       desktopContent = ''
