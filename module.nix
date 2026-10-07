@@ -25,6 +25,12 @@ let
         default = null;
         description = "Path to icon file";
       };
+      appDataDir = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Isolate user-data-dir for this PWA from the default directory for chromium;";
+      };
+
     };
   };
 
@@ -43,13 +49,17 @@ let
           urlWithUnderscores;
       wmClass = "chrome-${urlForClass}-Default";
 
+      useAppDataDir = if app.appDataDir then "true" else "false";
+
       launchScript = pkgs.writeShellScriptBin "${app.name}-webapp" ''
-        exec ${pkgs.chromium}/bin/chromium \
+        exec ${lib.getExe cfg.package} \
           --window-name="${app.name}" \
           --app=${app.url} \
-          --user-data-dir=$HOME/.config/chromium-webapps/${app.name} \
           --no-default-browser-check \
-          --disable-features=GlobalShortcutsPortal
+          --disable-features=GlobalShortcutsPortal \
+          ${lib.optionalString (
+            app.appDataDir == true
+          ) "--user-data-dir=$HOME/.config/chromium-webapps/\"${app.name}\""}
       '';
 
       desktopContent = ''
@@ -57,7 +67,7 @@ let
         Version=1.4
         Type=Application
         Name=${app.name}
-        Exec=${launchScript}/bin/${app.name}-webapp
+        Exec=${launchScript}/bin/"${app.name}-webapp"
         Terminal=false
         Categories=Network;WebBrowser;
         StartupWMClass=${wmClass}
@@ -66,7 +76,7 @@ let
     in
     pkgs.runCommand "${app.name}-desktop" { } ''
       mkdir -p $out/share/applications
-      cat > $out/share/applications/${app.name}.desktop <<EOF
+      cat > $out/share/applications/"${app.name}.desktop" <<EOF
       ${desktopContent}
       EOF
     '';
@@ -95,6 +105,11 @@ in
         ]
       '';
     };
+
+    package = mkPackageOption pkgs "chromium" { } // {
+      default = pkgs.chromium;
+    };
+
   };
 
   config = mkIf cfg.enable (
@@ -106,7 +121,7 @@ in
       );
     in
     {
-      home.packages = [ pkgs.chromium ] ++ (map mkDesktopEntry cfg.webApps) ++ iconPackages;
+      home.packages = [ cfg.package ] ++ (map mkDesktopEntry cfg.webApps) ++ iconPackages;
 
       home.activation.setupChromiumWebappProfiles = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         ${concatMapStrings (app: ''
