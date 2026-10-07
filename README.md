@@ -1,5 +1,7 @@
 # nix-chromium-webapps
 
+This is a fork of https://github.com/chobbledotcom/nix-chromium-webapps
+
 A home-manager module for creating Chromium-based web applications as desktop entries.
 
 ## Features
